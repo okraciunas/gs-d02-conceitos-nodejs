@@ -1,25 +1,72 @@
 const express = require("express");
 const cors = require("cors");
-
-// const { uuid } = require("uuidv4");
+const { uuid, isUuid } = require("uuidv4");
 
 const app = express();
+const repositories = [];
+
+// Middlewares
+function validateRepositoryCreation(request, response, next) {
+  const { title, url, techs } = request.body;
+
+  if (title && url && techs) {
+    return next();
+  }
+
+  return response.status(400).json({ error: "Invalid params" });
+}
+
+function validateRepositoryId(request, response, next) {
+  const { id } = request.params;
+
+  const hasId = repositories.some((repository) => repository.id === id);
+
+  if (hasId && isUuid(id)) {
+    return next();
+  }
+
+  return response.status(400).json({ error: "Repository not found." });
+}
 
 app.use(express.json());
 app.use(cors());
 
-const repositories = [];
-
+// Routes
 app.get("/repositories", (request, response) => {
-  // TODO
+  return response.json([...repositories]);
 });
 
-app.post("/repositories", (request, response) => {
-  // TODO
+app.post("/repositories", validateRepositoryCreation, (request, response) => {
+  const { title, url, techs } = request.body;
+
+  const newRepository = {
+    id: uuid(),
+    title,
+    url,
+    techs,
+    likes: 0,
+  };
+
+  repositories.push(newRepository);
+
+  return response.json(newRepository);
 });
 
-app.put("/repositories/:id", (request, response) => {
-  // TODO
+app.put("/repositories/:id", validateRepositoryId, (request, response) => {
+  const { id } = request.params;
+  const body = request.body;
+
+  const repositoryIndex = repositories.findIndex(
+    (repository) => repository.id === id
+  );
+  const repository = repositories[repositoryIndex];
+  const repositoryUpdated = {
+    ...repository,
+    ...body,
+  };
+  repositories[repositoryIndex] = repositoryUpdated;
+
+  return response.json(repositoryUpdated);
 });
 
 app.delete("/repositories/:id", (request, response) => {
