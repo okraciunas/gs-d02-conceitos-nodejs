@@ -6,6 +6,15 @@ const app = express();
 const repositories = [];
 
 // Middlewares
+function log(request, response, next) {
+  const { method, url } = request;
+  const message = `[${method.toUpperCase()}] ${url}`;
+
+  console.log(message);
+
+  return next();
+}
+
 function validateRepositoryCreation(request, response, next) {
   const { title, url, techs } = request.body;
 
@@ -30,6 +39,8 @@ function validateRepositoryId(request, response, next) {
 
 app.use(express.json());
 app.use(cors());
+app.use(log);
+app.use("/repositories/:id", validateRepositoryId);
 
 // Routes
 app.get("/repositories", (request, response) => {
@@ -52,13 +63,11 @@ app.post("/repositories", validateRepositoryCreation, (request, response) => {
   return response.json(newRepository);
 });
 
-app.put("/repositories/:id", validateRepositoryId, (request, response) => {
+app.put("/repositories/:id", (request, response) => {
   const { id } = request.params;
   const { title, url, techs } = request.body;
 
-  const repositoryIndex = repositories.findIndex(
-    (repository) => repository.id === id
-  );
+  const repositoryIndex = getRepositoryIndexById(id);
   const repository = repositories[repositoryIndex];
   const repositoryUpdated = {
     ...repository,
@@ -71,18 +80,32 @@ app.put("/repositories/:id", validateRepositoryId, (request, response) => {
   return response.json(repositoryUpdated);
 });
 
-app.delete("/repositories/:id", validateRepositoryId, (request, response) => {
+app.delete("/repositories/:id", (request, response) => {
   const { id } = request.params;
-  const repositoryIndex = repositories.findIndex(
-    (repository) => repository.id === id
-  );
+
+  const repositoryIndex = getRepositoryIndexById(id);
   repositories.splice(repositoryIndex, 1);
 
   return response.status(204).send();
 });
 
 app.post("/repositories/:id/like", (request, response) => {
-  // TODO
+  const { id } = request.params;
+
+  const repositoryIndex = getRepositoryIndexById(id);
+  const repository = repositories[repositoryIndex];
+  const repositoryUpdated = {
+    ...repository,
+    likes: repository.likes + 1,
+  };
+  repositories[repositoryIndex] = repositoryUpdated;
+
+  return response.json(repositoryUpdated);
 });
+
+// Helper
+function getRepositoryIndexById(id) {
+  return repositories.findIndex((repository) => repository.id === id);
+}
 
 module.exports = app;
