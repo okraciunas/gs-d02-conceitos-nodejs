@@ -1,0 +1,15 @@
+{
+  "name": "nodejs-challenge",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "repository": "https://github.com/okraciunas/nodejs-challenge",
+  "author": "Leonardo <leonardo@okraciunas.com> (http://www.okraciunas.com/)",
+  "license": "MIT",
+  "scripts": {
+    "dev": "nodemon"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.3"
+  }
+}
