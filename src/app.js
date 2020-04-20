@@ -54,7 +54,7 @@ app.post("/repositories", validateRepositoryCreation, (request, response) => {
 
 app.put("/repositories/:id", validateRepositoryId, (request, response) => {
   const { id } = request.params;
-  const body = request.body;
+  const { title, url, techs } = request.body;
 
   const repositoryIndex = repositories.findIndex(
     (repository) => repository.id === id
@@ -62,15 +62,23 @@ app.put("/repositories/:id", validateRepositoryId, (request, response) => {
   const repository = repositories[repositoryIndex];
   const repositoryUpdated = {
     ...repository,
-    ...body,
+    ...(title ? { title } : {}),
+    ...(url ? { url } : {}),
+    ...(techs ? { techs } : {}),
   };
   repositories[repositoryIndex] = repositoryUpdated;
 
   return response.json(repositoryUpdated);
 });
 
-app.delete("/repositories/:id", (request, response) => {
-  // TODO
+app.delete("/repositories/:id", validateRepositoryId, (request, response) => {
+  const { id } = request.params;
+  const repositoryIndex = repositories.findIndex(
+    (repository) => repository.id === id
+  );
+  repositories.splice(repositoryIndex, 1);
+
+  return response.status(204).send();
 });
 
 app.post("/repositories/:id/like", (request, response) => {
